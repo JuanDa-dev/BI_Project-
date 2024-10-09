@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modelo de Predicción</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Roboto:wght@400&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>Predicción de Texto</h2>
+        <form id="predictionForm">
+            <label for="inputText">Ingrese su texto:</label>
+            <textarea id="inputText" rows="4" placeholder="Escriba aquí..." required></textarea>
+            
+            <label for="modelSelect">Seleccione el modelo:</label>
+            <div class="custom-select">
+                <select id="modelSelect">
+                    <option value="naive_bayes">Naive Bayes</option>
+                    <option value="svm">SVM</option>
+                    <option value="random_forest">Random Forest</option>
+                </select>
+            </div>
+
+            <button type="submit">Enviar</button>
+        </form>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('predictionForm');
+        const resultDiv = document.getElementById('result');
+    
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+    
+            const inputText = document.getElementById('inputText').value;
+            const modelChoice = document.getElementById('modelSelect').value;
+    
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    text: [inputText],  // Asegúrate de que sea una lista
+                    model: modelChoice  // Enviar el modelo seleccionado
+                })
+            });
+    
+            const data = await response.json();
+            if (response.ok) {
+                let odsMapping = {
+                    '3': '3 - Salud y Bienestar',
+                    '4': '4 - Educación de Calidad',
+                    '5': '5 - Igualdad de Género'
+                };
+                let prediccion = odsMapping[data.predicciones[0]] || "ODS desconocido";
+                let probabilidad = data.probabilidades ? (data.probabilidades[0] * 100).toFixed(2) + "%" : 'No disponible';
+
+                resultDiv.innerHTML = `<p>Tu frase hace parte del ODS número ${prediccion}</p>
+                                       <p>Probabilidad: ${probabilidad}</p>`;
+            } else {
+                resultDiv.innerHTML = `<p>Error: ${data.error}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
