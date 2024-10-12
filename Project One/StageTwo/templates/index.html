@@ -57,10 +57,16 @@
                     '5': '5 - Igualdad de Género'
                 };
                 let prediccion = odsMapping[data.predicciones[0]] || "ODS desconocido";
-                let probabilidad = data.probabilidades ? (data.probabilidades[0] * 100).toFixed(2) + "%" : 'No disponible';
+                console.log(data.probabilidades);
+                console.log(data.probabilidades[0]);
+                //let probabilidad = data.probabilidades && data.probabilidades.length > 0 ? (data.probabilidades)  : 'No disponible';
+                let probabilidades = data.probabilidades
+                    ? data.probabilidades.map(prob => Math.round(parseFloat(prob.replace('%', ''))))  // Quitar '%' y convertir a entero
+                    : 'No disponible';
 
+                let probabilidadMayor = Math.max(...probabilidades); 
                 resultDiv.innerHTML = `<p>Tu frase hace parte del ODS número ${prediccion}</p>
-                                       <p>Probabilidad: ${probabilidad}</p>`;
+                                       <p>Probabilidad: ${probabilidadMayor}%</p>`;
             } else {
                 resultDiv.innerHTML = `<p>Error: ${data.error}</p>`;
             }
