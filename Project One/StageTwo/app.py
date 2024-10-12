@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 import joblib
+import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
@@ -49,16 +50,43 @@ def predict():
     predicciones = model.predict(textos)
 
     # Si el modelo tiene 'predict_proba', calcular y devolver las probabilidades
-    if hasattr(model, 'predict_proba'):
-        probabilidades = model.predict_proba(textos).tolist()
-        probabilidades_format = [f'{p * 100:.2f}%' for p in probabilidades[0]]  # Convertir a porcentaje
-    else:
-        probabilidades_format = 'No disponible'
+    # if hasattr(model, 'predict_proba'):
+    #     probabilidades = model.predict_proba(textos).tolist()
+    #     probabilidades_format = [f'{p * 100:.2f}%' for p in probabilidades[0]]  # Convertir a porcentaje
+    # else:
+    #     probabilidades_format = 'No disponible'
 
     # Devolver el accuracy y las predicciones
+
+    # if model_name == 'naive_bayes':
+    #     probabilidades = model.predict_proba(textos)
+    #     probabilidades_format = probabilidades  # Convertir a porcentaje
+    # elif model_name == 'svm':
+    #     probabilidades_format = 'No disponible'
+    # elif model_name == 'random_forest':
+    #     probabilidades = model.predict_proba(textos).tolist()
+    #     probabilidades_format = [f'{p * 100:.2f}%' for p in probabilidades[0]]  # Convertir a porcentaje
+    # else:
+    #     probabilidades_format = 'No disponible'
+
+    try:
+        if model_name == 'naive_bayes' or model_name == 'random_forest':
+            probabilidades = model.predict_proba(textos)
+            if not np.isnan(probabilidades).any():
+                probabilidades_format = [f'{p * 100:.2f}%' for p in probabilidades[0]]
+            else:
+                probabilidades_format = 'Probabilidades no disponibles'
+        else:
+            probabilidades_format = 'No disponible'
+    except Exception as e:
+        return jsonify({'error': f'Error al calcular probabilidades: {str(e)}'}), 500
+
+    print(probabilidades_format)
+
     return jsonify({
         'predicciones': predicciones.tolist(),
-        'probabilidades': probabilidades_format,
+            
+        'probabilidades': probabilidades_format,  # No usar .tolist() aquí
         'accuracy': f'{accuracy * 100:.2f}%' if accuracy else 'Accuracy no disponible'
     }), 200
     
