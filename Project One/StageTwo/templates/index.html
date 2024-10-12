@@ -28,6 +28,33 @@
         <div id="result"></div>
     </div>
 
+    <div class="container_2">
+        <h2>Reentrenamiento</h2>
+        <form id="retrainingForm">
+            <label for="fileInput">Ingrese los nuevos datos: </label>
+            <input type="file" id="fileInput" accept=".csv, .xlsx, .xls" required>
+            
+            
+            <div class="custom-select">
+                <label for="modelSelect_2">Seleccione el modelo:</label>
+                <select id="modelSelect_2">
+                    <option value="naive_bayes">Naive Bayes</option>
+                    <option value="svm">SVM</option>
+                    <option value="random_forest">Random Forest</option>
+                </select>
+            </div>
+            <div class="target_input">
+                <label id="target_input_label" for="target_value">Ingrese la variable objetivo</label>
+                
+                <input type="text" id="target_value" name="target_value" >
+                
+            </div>
+
+            <button type="submit">Enviar</button>
+        </form>
+        <div id="result_2"></div>
+    </div>
+
     <script>
         const form = document.getElementById('predictionForm');
         const resultDiv = document.getElementById('result');
@@ -60,17 +87,88 @@
                 console.log(data.probabilidades);
                 console.log(data.probabilidades[0]);
                 //let probabilidad = data.probabilidades && data.probabilidades.length > 0 ? (data.probabilidades)  : 'No disponible';
-                let probabilidades = data.probabilidades
-                    ? data.probabilidades.map(prob => Math.round(parseFloat(prob.replace('%', ''))))  // Quitar '%' y convertir a entero
-                    : 'No disponible';
 
-                let probabilidadMayor = Math.max(...probabilidades); 
+                let probabilidadMayor;  // Definir la variable fuera del bloque if-else
+
+                if (data.probabilidades === "No disponible") {
+                    probabilidadMayor = 'No disponible';
+                } else {
+                    let probabilidades = data.probabilidades.map(prob => 
+                        Math.round(parseFloat(prob.replace('%', '')))  // Quitar '%' y convertir a entero
+                    );
+
+                    probabilidadMayor = Math.max(...probabilidades);  // Calcular el valor máximo
+                }
+
+                
+
+                // if (probabilidadMayor === 0) {
+                //     probabilidadMayor = 'No disponible';
+                // }
                 resultDiv.innerHTML = `<p>Tu frase hace parte del ODS número ${prediccion}</p>
                                        <p>Probabilidad: ${probabilidadMayor}%</p>`;
             } else {
                 resultDiv.innerHTML = `<p>Error: ${data.error}</p>`;
             }
         });
+
+        const form_2 = document.getElementById('retrainingForm');
+        const resultDiv_2 = document.getElementById('result_2');
+
+        form_2.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const inputText_2 = document.getElementById('target_value').value;
+            const modelChoice = document.getElementById('modelSelect_2').value;
+            const fileInput = document.getElementById('fileInput');
+
+            console.log(inputText_2);
+            console.log(modelChoice);
+            
+
+            if (fileInput.files.length === 0) {
+                alert('Please upload a CSV file.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async function(e) {
+                const csv = e.target.result; // Raw CSV data
+
+                // Fetch the retraining endpoint after reading the CSV
+                const response = await fetch('/retrain', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        csv: csv, // Send the raw CSV data
+                        target_value: inputText_2, // Target value input
+                        model: modelChoice // Model choice input
+                    })
+                });
+
+                const data = await response.json(); // Move this inside the reader.onload function
+                if (response.ok) {
+                    let accuracy_ = data.accuracy || 'No disponible';
+                    let precision_ = data.precision || 'No disponible';
+                    let recall_ = data.recall || 'No disponible';
+                    let f1 = data.f1_score || 'No disponible';
+
+                    resultDiv_2.innerHTML = `<p>Accuracy: ${accuracy_}</p>
+                                            <p>Precision: ${precision_}</p>
+                                            <p>Recall: ${recall_}</p>
+                                            <p>F1 Score: ${f1}</p>`;
+                } else {
+                    resultDiv_2.innerHTML = `<p>Error: ${data.error}</p>`;
+                }
+            };
+
+            // Read the file after setting up the onload handler
+            reader.readAsText(file); // Ensure this is called to start reading the file
+        });  
     </script>
 </body>
 </html>
