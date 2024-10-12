@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 import joblib
+import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
@@ -94,8 +95,8 @@ def predict():
 @app.route('/retrain', methods=['POST'])
 def retrain():
     data = request.get_json()
-    textos = data['text']  # Características (X)
-    etiquetas = data['label']  # Etiquetas (y)
+    textos = data['csv']  # Características (X)
+    etiquetas = data['target_value']  # Etiquetas (y)
     model_name = data['model']  # Nombre del modelo a reentrenar
 
     # Seleccionar el modelo correspondiente
@@ -110,9 +111,18 @@ def retrain():
         pipeline = pipeline_rf
     else:
         return jsonify({'error': 'Modelo no reconocido'}), 400
+    
+    print("start")
+    with open('temp_data.csv', 'w', encoding='utf-8') as temp_csv_file:
+        temp_csv_file.write(textos)
+
+    # Read the CSV data into a DataFrame
+    df = pd.read_csv('temp_data.csv')
+    print("start")
 
     # Re-entrenar el modelo
-    X_train, X_test, y_train, y_test = train_test_split(textos, etiquetas, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(
+        df['Textos_espanol'], df['sdg'], test_size=0.2, random_state=42)
     pipeline.fit(X_train, y_train)
     
     # Guardar el nuevo modelo
@@ -127,6 +137,8 @@ def retrain():
 
     # Guardar el accuracy en el diccionario
     accuracy_scores[model_name] = accuracy
+
+    print(f'Accuracy: {accuracy:.2f}, Precision: {precision:.2f}, Recall: {recall:.2f}, F1 Score: {f1:.2f}')
 
     # Devolver las métricas
     return jsonify({
