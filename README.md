@@ -7,5 +7,5 @@ Utilizar un entorno virtual para ejecutar el proyecto, las librerias necesarias 
 
 * Crear entorno virtual : python -m venv ./venv
 * instalar librerias de requirements.txt: pip install -r requirements.txt
-* Ubicarse en la carpeta StageTwo
+* Ubicarse en la carpeta StageTwo: cd BI_Project-/Project One /StageTwo/
 * Abrir terminal y ejecutar py ./app.py
