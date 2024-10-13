@@ -3,7 +3,7 @@
 Utilizar un entorno virtual para ejecutar el proyecto, las librerias necesarias estan en el requirements.txt
 
 
-# Paso para ejecutar la parte 2 del proyecto 
+# Pasos para ejecutar la parte 2 del proyecto 
 
 * Crear entorno virtual : python -m venv ./venv
 * instalar librerias de requirements.txt: pip install -r requirements.txt
